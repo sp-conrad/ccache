@@ -871,15 +871,19 @@ void Url::build_url() const {
             throw Url::build_error("User info defined, but host is empty");
         if (!m_port.empty())
             throw Url::build_error("Port defined, but host is empty");
+#ifndef _WIN32
         if (!m_path.empty()) {
             const char *b=m_path.data(), *e=b+m_path.length(), *p=find_first_of(b,e,":/");
             if (p!=e && *p==':')
                 throw Url::build_error("The first segment of the relative path can't contain ':'");
         }
+#endif
     }
     if (!m_path.empty()) {
+#ifndef _WIN32
         if (m_path[0]!='/'&&!m_host.empty())
             throw Url::build_error("Path must start with '/' when host is not empty");
+#endif
         url<<encode(m_path, 0x0F);
     }
     if (!m_query.empty()) {

@@ -1461,10 +1461,11 @@ hash_common_info(const Context& ctx,
   // even without debug flags. Hashing the directory should be enough since the
   // filename is included in the hash anyway.
   if (ctx.config.is_compiler_group_msvc() && ctx.config.hash_dir()) {
-    const std::string output_obj_dir =
+    std::string output_obj_dir =
       util::is_absolute_path(args_info.output_obj)
         ? std::string(Util::dir_name(args_info.output_obj))
         : ctx.actual_cwd;
+    output_obj_dir = Util::make_relative_path(ctx, output_obj_dir);
     LOG("Hashing object file directory {}", output_obj_dir);
     hash.hash_delimiter("source path");
     hash.hash(output_obj_dir);
@@ -1777,6 +1778,12 @@ hash_argument(const Context& ctx,
   }
 
   // All other arguments are included in the hash.
+  // Genesys - found weird variation between machines where some will quote the value of certain
+  // passed parameters.  Until I find the source of the problem I'm going to just strip out
+  // all quotes.
+  std::string strippedArg = args[i];
+  auto newStrippedEnd = std::remove(strippedArg.begin(), strippedArg.end(), '"');
+  strippedArg.erase(newStrippedEnd, strippedArg.end());
   hash.hash_delimiter("arg");
   hash.hash(args[i]);
   if (i + 1 < args.size() && compopt_takes_arg(args[i])) {
